@@ -13,6 +13,7 @@ const { ContextualIdentityService: Containers } = ChromeUtils.importESModule(
 );
 
 const { AppConstants } = ChromeUtils.importESModule("resource://gre/modules/AppConstants.sys.mjs");
+const { setInterval } = ChromeUtils.importESModule("resource://gre/modules/Timer.sys.mjs");
 const { AddonManager } = ChromeUtils.importESModule("resource://gre/modules/AddonManager.sys.mjs");
 
 const HOME = Services.dirsvc.get("Home", Ci.nsIFile).path;
@@ -72,6 +73,11 @@ const state = {
 // Set omarchy-gapps.debug to true in about:config to log to gapps.log in the
 // profile.
 const LOG_FILE = PathUtils.join(PathUtils.profileDir, "gapps.log");
+function report(e) {
+  console.error("omarchy-container-gapps:", e);
+  debug("error", e, e?.stack);
+}
+
 function debug(...parts) {
   if (!Services.prefs.getBoolPref("omarchy-gapps.debug", false)) return;
   IOUtils.writeUTF8(LOG_FILE, `${new Date().toISOString()} ${parts.join(" ")}\n`, { mode: "appendOrCreate" });
@@ -142,6 +148,7 @@ async function reloadFiles() {
     ensureContainers();
   }
   if (themeChanged || accountsChanged) {
+    debug("reload", themeChanged ? "theme" : "", accountsChanged ? "accounts" : "", "windows", state.windows.size);
     for (const win of state.windows.values()) refreshWindow(win);
   }
 }
@@ -487,7 +494,7 @@ function setUpWindow(win, launch) {
 
   installKeys(win);
   addSideLabel(win);
-  placeExtensionButtons(win).catch(e => console.error("omarchy-container-gapps:", e));
+  placeExtensionButtons(win).catch(report);
 
   const placeholder = gBrowser.selectedTab;
   refreshWindow(win);
@@ -532,12 +539,13 @@ Services.obs.addObserver(win => {
     try {
       onNewWindow(win);
     } catch (e) {
-      console.error("omarchy-container-gapps:", e);
+      report(e);
     }
   });
 }, "browser-delayed-startup-finished");
 
-const timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-timer.initWithCallback(() => reloadFiles().catch(console.error), POLL_MS, Ci.nsITimer.TYPE_REPEATING_SLACK);
+// Timer.sys.mjs keeps its timers alive; a bare nsITimer held only by this
+// module gets garbage-collected after a few ticks.
+setInterval(() => reloadFiles().catch(report), POLL_MS);
 
 export const loaded = true;
