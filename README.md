@@ -4,11 +4,9 @@ Gmail and Google Calendar as two clean desktop apps on Omarchy, with one
 Firefox container per Google account. Each account is a pill in a slim strip
 at the top of the window; nothing else of the browser shows.
 
-```
- ● Personal 3   ● Work 12   ● Side                              MAIL
-───────────────────────────────────────────────────────────────────────
-                         Gmail, full window
-```
+![The Mail app: account pills above a full-window inbox](docs/mail.png)
+
+![Switch accounts with Alt+arrows, see unread counts, add accounts with +, and jump to Mail or Calendar from anywhere](docs/overview.png)
 
 - **Mail** (Super+Shift+E) and **Calendar** (Super+Shift+C) open on the current
   workspace, or switch to wherever they are already open. Super+Shift+Alt+E starts a new email
@@ -19,6 +17,15 @@ at the top of the window; nothing else of the browser shows.
 - Links in emails and events open in your default browser. Attachments,
   sign-in pages and other Google pages that need the account stay in the app.
 - Each account signs in once, in its own container, and stays signed in.
+
+<table><tr>
+<td><img src="docs/calendar.png" alt="The Calendar app with its own account pills"></td>
+<td><img src="docs/add-account.png" alt="The add-account popover: name, email, Mail/Calendar, color"></td>
+</tr></table>
+
+The pill strip follows whichever Omarchy theme is active:
+
+![The pill strip in Tokyo Night, Gruvbox, Catppuccin Latte and Rosé Pine Dawn](docs/themes.png)
 
 ## Install
 
@@ -79,6 +86,16 @@ The app runs as its own Firefox process with the window class
 The module uses Firefox internals, so a Firefox update can break it. If the
 app opens as a plain Firefox window, set `omarchy-gapps.debug` to `true` in
 `about:config` of the app profile and read `gapps.log` in the profile folder.
+
+## Screenshots
+
+The images in `docs/` are mockups with made-up accounts and data, drawn from
+`docs/screenshots/mock.html` with the same styles as the app. Regenerate them
+with:
+
+```sh
+CHROME=/usr/bin/chromium node docs/screenshots/render.cjs
+```
 
 ## Uninstall
 
