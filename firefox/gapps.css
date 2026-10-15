@@ -278,6 +278,11 @@
 
 /* Add-account popover. */
 #gapps-add-panel {
+  --panel-background: var(--gapps-bg);
+  --panel-color: var(--gapps-fg);
+  --panel-border-color: var(--gapps-border);
+  --panel-border-radius: 14px;
+  --panel-padding: 0;
   --arrowpanel-background: var(--gapps-bg);
   --arrowpanel-color: var(--gapps-fg);
   --arrowpanel-border-color: var(--gapps-border);
@@ -291,6 +296,10 @@
   gap: 14px;
   width: 300px;
   padding: 18px;
+  margin: -1px;
+  border: 1px solid var(--gapps-border);
+  border-radius: 14px;
+  background: var(--gapps-bg);
   font-family: system-ui, sans-serif;
   font-size: 13px;
   color: var(--gapps-fg);
