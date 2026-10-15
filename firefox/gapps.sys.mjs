@@ -49,12 +49,16 @@ const APPS = {
 };
 
 // Pages that need the account's cookies, so they stay in the app when a
-// mail or calendar opens them in a new tab. Everything else goes to the
-// default browser.
+// mail or calendar opens them in a new tab. The tab keeps the container, so
+// a Doc or Meet link from the Work inbox opens as Work. Everything else goes
+// to the default browser.
 const STAYS_IN_APP = [
   /^(mail|calendar|accounts|contacts)\.google\.com$/,
-  /^addons\.mozilla\.org$/,
+  // Docs, Sheets, Slides and Forms all live on docs.google.com.
+  /^(docs|drive|meet|chat|keep|sites)\.google\.com$/,
+  /^drive\.usercontent\.google\.com$/,
   /\.googleusercontent\.com$/,
+  /^addons\.mozilla\.org$/,
 ];
 
 const DEFAULT_COLORS = ["accent", "blue", "green", "magenta", "orange", "cyan", "yellow", "red"];

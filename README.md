@@ -14,8 +14,9 @@ at the top of the window; nothing else of the browser shows.
 - **Alt+←/→** steps through accounts; **Alt+1…9** jumps to one.
 - Unread counts from Gmail show on each pill.
 - Colors follow the current Omarchy theme and update when it changes.
-- Links in emails and events open in your default browser. Attachments,
-  sign-in pages and other Google pages that need the account stay in the app.
+- Links in emails and events open in your default browser. Google links (Docs,
+  Sheets, Drive, Meet…), attachments and sign-in pages stay in the app as a tab
+  in the same account.'s container.
 - Each account signs in once, in its own container, and stays signed in.
 
 <table><tr>
