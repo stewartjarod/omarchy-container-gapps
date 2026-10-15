@@ -23,7 +23,7 @@ at the top of the window; nothing else of the browser shows.
 ## Install
 
 ```sh
-git clone <this repo> ~/Projects/omarchy-container-gapps
+git clone https://github.com/stewartjarod/omarchy-container-gapps ~/Projects/omarchy-container-gapps
 cd ~/Projects/omarchy-container-gapps
 ./install.sh
 ```
