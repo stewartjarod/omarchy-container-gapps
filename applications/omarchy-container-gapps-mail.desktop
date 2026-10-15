@@ -1,0 +1,16 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Mail
+GenericName=Gmail
+Comment=Gmail for every Google account, one Firefox container each
+Exec=omarchy-container-gapps mail
+Icon=internet-mail
+StartupWMClass=omarchy-container-gapps
+Terminal=false
+Categories=Network;Email;
+Actions=compose;
+
+[Desktop Action compose]
+Name=New email
+Exec=omarchy-container-gapps mail --compose

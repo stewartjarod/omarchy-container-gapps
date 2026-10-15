@@ -1,0 +1,15 @@
+# omarchy-container-gapps accounts: one Google account per line.
+#
+#   <label>  <apps>  [email]  [color]
+#
+# label  Name on the pill. One Firefox container per label; renaming a label
+#        makes a new, signed-out container.
+# apps   mail, cal, or mail,cal
+# email  Optional. Pre-fills Google's sign-in page.
+# color  Optional. An Omarchy theme color (accent, red, green, yellow, blue,
+#        magenta, cyan, orange) or #rrggbb. Defaults cycle through the theme.
+#
+# Changes show up in open windows within a couple of seconds.
+
+Personal   mail,cal   you@example.com
+Work       mail,cal   you@example.org

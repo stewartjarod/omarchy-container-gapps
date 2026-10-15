@@ -1,0 +1,68 @@
+#!/bin/bash
+
+# Open the Mail or Calendar app, or focus it and bring it to the current
+# workspace if it is already open.
+# usage: omarchy-container-gapps mail|calendar [--compose]
+#        omarchy-container-gapps addons   (install 1Password etc. in the app)
+
+set -euo pipefail
+
+APP_ID=omarchy-container-gapps
+ROOT=$(dirname "$(dirname "$(readlink -f "$0")")")
+PROFILE=${XDG_DATA_HOME:-$HOME/.local/share}/$APP_ID/profile
+FIREFOX=${GAPPS_FIREFOX:-/usr/lib/firefox/firefox}
+
+case ${1:-} in
+  mail) role=mail title=Mail ;;
+  cal | calendar) role=calendar title=Calendar ;;
+  addons) role=addons title=Mail ;;
+  *)
+    echo "usage: $APP_ID mail|calendar [--compose] | addons" >&2
+    exit 1
+    ;;
+esac
+request="about:blank?gapps=$role"
+[[ ${2:-} == --compose ]] && request+="&compose"
+
+find_window() {
+  hyprctl clients -j | jq -r --arg class "$APP_ID" --arg title "$title · " \
+    '[.[] | select(.class == $class and (.title | startswith($title)))][0].address // empty'
+}
+
+bring_here() {
+  local workspace
+  workspace=$(hyprctl activeworkspace -j | jq -r '.id')
+  hyprctl dispatch "hl.dsp.focus({ window = \"address:$1\" })" >/dev/null
+  hyprctl dispatch "hl.dsp.window.move({ workspace = \"$workspace\" })" >/dev/null
+}
+
+# Firefox's profile lock is a symlink to "<ip>:+<pid>" while it runs.
+running() {
+  local lock
+  lock=$(readlink "$PROFILE/lock" 2>/dev/null) || return 1
+  kill -0 "${lock##*+}" 2>/dev/null
+}
+
+mkdir -p "$PROFILE"
+ln -sfn "$ROOT/firefox" "$PROFILE/gapps"
+ln -sf "$ROOT/firefox/user.js" "$PROFILE/user.js"
+
+address=$(find_window)
+if [[ -n $address && $role != addons && $request != *compose ]]; then
+  bring_here "$address"
+  exit 0
+fi
+
+if running; then
+  "$FIREFOX" --profile "$PROFILE" --new-tab "$request"
+else
+  setsid "$FIREFOX" --class "$APP_ID" --name "$APP_ID" --profile "$PROFILE" --new-window "$request" \
+    >/dev/null 2>&1 </dev/null &
+fi
+
+for _ in {1..100}; do
+  address=$(find_window)
+  [[ -n $address ]] && break
+  sleep 0.1
+done
+[[ -n $address ]] && bring_here "$address"

@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Calendar
+GenericName=Google Calendar
+Comment=Google Calendar for every Google account, one Firefox container each
+Exec=omarchy-container-gapps calendar
+Icon=x-office-calendar
+StartupWMClass=omarchy-container-gapps
+Terminal=false
+Categories=Office;Calendar;

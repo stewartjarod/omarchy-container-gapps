@@ -1,0 +1,260 @@
+/* omarchy-container-gapps window chrome: a slim strip of account pills over
+   the page. Loaded only into Mail/Calendar windows by gapps.sys.mjs, which
+   also sets the --gapps-* colors from the current Omarchy theme. */
+
+:root {
+  --gapps-bg: #1a1b26;
+  --gapps-fg: #c0caf5;
+  --gapps-muted: #737aa2;
+  --gapps-surface: #24283b;
+  --gapps-hover: #1f2335;
+  --gapps-border: #292e42;
+  --gapps-accent: #7aa2f7;
+  color-scheme: dark;
+}
+
+:root[gapps-mode="light"] {
+  color-scheme: light;
+}
+
+/* Everything but the tab strip. */
+#nav-bar,
+#PersonalToolbar,
+#toolbar-menubar,
+#sidebar-main,
+#sidebar-box,
+#sidebar-splitter,
+#firefox-view-button,
+#alltabs-button,
+#new-tab-button,
+#tabs-newtab-button,
+#tabbrowser-tabs .tabs-newtab-button,
+#TabsToolbar .titlebar-spacer,
+#TabsToolbar .titlebar-buttonbox-container,
+#TabsToolbar toolbarbutton:not(.webextension-browser-action),
+#TabsToolbar toolbarpaletteitem,
+#tabbrowser-arrowscrollbox::part(scrollbutton-up),
+#tabbrowser-arrowscrollbox::part(scrollbutton-down),
+#tabbrowser-arrowscrollbox::part(overflow-start-indicator),
+#tabbrowser-arrowscrollbox::part(overflow-end-indicator),
+.tab-context-line,
+.tab-secondary-label,
+.tab-icon-overlay,
+.tab-sharing-icon-overlay,
+#tabbrowser-tabs[orient] .tab-drop-indicator {
+  display: none !important;
+}
+
+/* The regular toolbar is back while a non-account tab is selected. */
+:root[gapps-extra-tab] #nav-bar {
+  display: flex !important;
+  background: var(--gapps-bg) !important;
+  border-top: 1px solid var(--gapps-border) !important;
+}
+
+#navigator-toolbox {
+  background: var(--gapps-bg) !important;
+  border-bottom: 1px solid var(--gapps-border) !important;
+  appearance: none !important;
+}
+
+#TabsToolbar {
+  background: transparent !important;
+  min-height: 0 !important;
+  padding: 7px 12px !important;
+  color: var(--gapps-fg) !important;
+}
+
+#TabsToolbar-customization-target {
+  align-items: center;
+  gap: 8px;
+}
+
+#tabbrowser-tabs {
+  min-height: 0 !important;
+  border: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+#tabbrowser-tabs,
+#tabbrowser-arrowscrollbox {
+  --tab-min-height: 30px !important;
+  --tab-block-margin: 0 !important;
+  --tab-border-radius: 999px !important;
+}
+
+/* Pills ---------------------------------------------------------------- */
+
+.tabbrowser-tab {
+  flex: 0 0 auto !important;
+  width: auto !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  padding: 0 2px !important;
+  overflow: visible !important;
+}
+
+.tabbrowser-tab .tab-stack {
+  min-height: 30px !important;
+}
+
+.tabbrowser-tab .tab-background {
+  margin: 0 !important;
+  border-radius: 999px !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  outline: none !important;
+  border: 0 !important;
+  transition: background-color 120ms ease;
+}
+
+.tabbrowser-tab:hover .tab-background {
+  background: var(--gapps-hover) !important;
+}
+
+.tabbrowser-tab[selected] .tab-background {
+  background: var(--gapps-surface) !important;
+  box-shadow: inset 0 0 0 1px var(--gapps-border) !important;
+}
+
+.tabbrowser-tab .tab-content {
+  padding: 0 12px !important;
+  gap: 8px;
+  opacity: 1 !important;
+}
+
+.tabbrowser-tab:focus-visible > .tab-stack > .tab-background {
+  outline: 2px solid var(--gapps-accent) !important;
+  outline-offset: 1px !important;
+}
+
+/* Account tabs show our pill instead of Firefox's icon, title and close button. */
+.tabbrowser-tab[gapps-account] .tab-icon-stack,
+.tabbrowser-tab[gapps-account] .tab-throbber,
+.tabbrowser-tab[gapps-account] .tab-icon-pending,
+.tabbrowser-tab[gapps-account] .tab-icon-image,
+.tabbrowser-tab[gapps-account] .tab-label-container,
+.tabbrowser-tab[gapps-account] .tab-close-button,
+.tabbrowser-tab[gapps-account] .tab-audio-button {
+  display: none !important;
+}
+
+.gapps-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font: menu;
+  font-family: system-ui, sans-serif;
+  font-size: 13px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.gapps-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--gapps-color, var(--gapps-accent));
+  opacity: 0.55;
+  transition: opacity 150ms ease, box-shadow 150ms ease;
+}
+
+.tabbrowser-tab[selected] .gapps-dot {
+  opacity: 1;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--gapps-color, var(--gapps-accent)) 25%, transparent);
+}
+
+.tabbrowser-tab[busy] .gapps-dot {
+  animation: gapps-pulse 1s ease-in-out infinite alternate;
+}
+
+@keyframes gapps-pulse {
+  from { opacity: 0.25; }
+  to { opacity: 1; }
+}
+
+.gapps-label {
+  color: var(--gapps-muted);
+  font-weight: 500;
+  transition: color 120ms ease;
+}
+
+.tabbrowser-tab:hover .gapps-label,
+.tabbrowser-tab[selected] .gapps-label {
+  color: var(--gapps-fg);
+}
+
+.gapps-count {
+  min-width: 8px;
+  padding: 3px 7px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  color: var(--gapps-bg);
+  background: var(--gapps-color, var(--gapps-accent));
+}
+
+.gapps-count:empty {
+  display: none;
+}
+
+/* Other tabs (attachments, sign-in pages) stay small and closable. */
+.tabbrowser-tab:not([gapps-account]) {
+  max-width: 200px !important;
+}
+
+.tabbrowser-tab:not([gapps-account]) .tab-label {
+  color: var(--gapps-muted);
+  font-size: 12px;
+}
+
+.tabbrowser-tab:not([gapps-account])[selected] .tab-label {
+  color: var(--gapps-fg);
+}
+
+.tabbrowser-tab:not([gapps-account]) .tab-close-button {
+  display: flex !important;
+  width: 20px !important;
+  height: 20px !important;
+  padding: 4px !important;
+  border-radius: 999px !important;
+}
+
+/* App name, right-aligned. */
+#gapps-app-label {
+  margin-inline-start: auto;
+  padding-inline: 8px 4px;
+  color: var(--gapps-muted);
+  font-family: system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+/* Extension buttons (1Password etc.) after the app name. */
+#TabsToolbar .webextension-browser-action {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+#TabsToolbar .webextension-browser-action > .toolbarbutton-badge-stack {
+  padding: 6px !important;
+  border-radius: 999px !important;
+}
+
+#TabsToolbar .webextension-browser-action:hover > .toolbarbutton-badge-stack {
+  background: var(--gapps-hover) !important;
+}
+
+/* Page area. */
+#tabbrowser-tabbox,
+#tabbrowser-tabpanels,
+.browserStack,
+#browser {
+  background: var(--gapps-bg) !important;
+}
