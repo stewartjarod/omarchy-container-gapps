@@ -10,8 +10,8 @@ at the top of the window; nothing else of the browser shows.
                          Gmail, full window
 ```
 
-- **Mail** (Super+Shift+E) and **Calendar** (Super+Shift+C) open, or come to
-  the current workspace if already open. Super+Shift+Alt+E starts a new email
+- **Mail** (Super+Shift+E) and **Calendar** (Super+Shift+C) open on the current
+  workspace, or switch to wherever they are already open. Super+Shift+Alt+E starts a new email
   in the selected account.
 - **Alt+←/→** steps through accounts; **Alt+1…9** jumps to one.
 - Unread counts from Gmail show on each pill.

@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Open the Mail or Calendar app, or focus it and bring it to the current
-# workspace if it is already open.
+# Open the Mail or Calendar app on the current workspace, or, if it is
+# already open, switch to it wherever it is.
 # usage: omarchy-container-gapps mail|calendar [--compose]
 #        omarchy-container-gapps add <label> [email] [mail|cal|mail,cal] [color]
 #        omarchy-container-gapps addons   (install 1Password etc. in the app)
@@ -75,8 +75,13 @@ find_window() {
 # may open the window next to the other app's window and pull focus there.
 WORKSPACE=$(hyprctl activeworkspace -j | jq -r '.id')
 
-bring_here() {
+# Focusing a window also switches to its workspace.
+focus() {
   hyprctl dispatch "hl.dsp.focus({ window = \"address:$1\" })" >/dev/null
+}
+
+bring_here() {
+  focus "$1"
   hyprctl dispatch "hl.dsp.window.move({ workspace = \"$WORKSPACE\" })" >/dev/null
 }
 
@@ -91,10 +96,11 @@ mkdir -p "$PROFILE"
 ln -sfn "$ROOT/firefox" "$PROFILE/gapps"
 ln -sf "$ROOT/firefox/user.js" "$PROFILE/user.js"
 
-address=$(find_window)
-if [[ -n $address && $role != addons && $request != *compose ]]; then
-  bring_here "$address"
-  exit 0
+existing=$(find_window)
+if [[ -n $existing ]]; then
+  focus "$existing"
+  # Compose and addons still go to Firefox, which acts in that window.
+  [[ $role == addons || $request == *compose ]] || exit 0
 fi
 
 if running; then
@@ -109,4 +115,7 @@ for _ in {1..100}; do
   [[ -n $address ]] && break
   sleep 0.1
 done
-[[ -n $address ]] && bring_here "$address"
+# A window that was already open stays where it is; a new one comes here.
+if [[ -n $address && -z $existing ]]; then
+  bring_here "$address"
+fi
