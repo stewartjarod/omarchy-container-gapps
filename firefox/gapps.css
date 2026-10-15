@@ -204,6 +204,14 @@
   max-width: 200px !important;
 }
 
+/* Let Firefox's open/close animation run. A closing tab loses [fadein] and
+   is only removed once its max-width shrinks to 0.1px, so pinning max-width
+   above leaves an invisible closed tab holding its space in the strip. */
+.tabbrowser-tab:not([fadein]) {
+  max-width: 0.1px !important;
+  min-width: 0.1px !important;
+}
+
 .tabbrowser-tab:not([gapps-account]) .tab-label {
   color: var(--gapps-muted);
   font-size: 12px;
