@@ -27,11 +27,9 @@
 #firefox-view-button,
 #alltabs-button,
 #new-tab-button,
-#tabs-newtab-button,
-#tabbrowser-tabs .tabs-newtab-button,
 #TabsToolbar .titlebar-spacer,
 #TabsToolbar .titlebar-buttonbox-container,
-#TabsToolbar toolbarbutton:not(.webextension-browser-action),
+#TabsToolbar toolbarbutton:not(.webextension-browser-action, .gapps-add-button),
 #TabsToolbar toolbarpaletteitem,
 #tabbrowser-arrowscrollbox::part(scrollbutton-up),
 #tabbrowser-arrowscrollbox::part(scrollbutton-down),
@@ -234,6 +232,234 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
   opacity: 0.7;
+}
+
+/* The + after the pills. */
+.gapps-add-button {
+  display: flex !important;
+  appearance: none !important;
+  align-self: center !important;
+  width: 26px !important;
+  height: 26px !important;
+  margin: 0 0 0 4px !important;
+  padding: 0 !important;
+  border-radius: 999px !important;
+  border: 1px dashed var(--gapps-border) !important;
+  background: transparent !important;
+  color: var(--gapps-muted) !important;
+  fill: currentColor !important;
+  justify-content: center;
+  align-items: center;
+  transition: color 120ms ease, border-color 120ms ease, background-color 120ms ease;
+}
+
+.gapps-add-button > .toolbarbutton-icon {
+  width: 14px !important;
+  height: 14px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  background: none !important;
+  list-style-image: url("chrome://global/skin/icons/plus.svg") !important;
+  -moz-context-properties: fill;
+  fill: currentColor !important;
+}
+
+.gapps-add-button > .toolbarbutton-text {
+  display: none !important;
+}
+
+.gapps-add-button:hover,
+.gapps-add-button[open] {
+  color: var(--gapps-fg) !important;
+  border-style: solid !important;
+  border-color: var(--gapps-muted) !important;
+  background: var(--gapps-hover) !important;
+}
+
+/* Add-account popover. */
+#gapps-add-panel {
+  --arrowpanel-background: var(--gapps-bg);
+  --arrowpanel-color: var(--gapps-fg);
+  --arrowpanel-border-color: var(--gapps-border);
+  --arrowpanel-border-radius: 14px;
+  --arrowpanel-padding: 0;
+}
+
+#gapps-add-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 300px;
+  padding: 18px;
+  font-family: system-ui, sans-serif;
+  font-size: 13px;
+  color: var(--gapps-fg);
+}
+
+.gapps-add-title {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.gapps-add-hint {
+  margin-top: -10px;
+  color: var(--gapps-muted);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.gapps-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.gapps-field > span {
+  color: var(--gapps-muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.gapps-field > span.gapps-optional::after {
+  content: " · optional";
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.gapps-field input:not([type="checkbox"]) {
+  appearance: none;
+  height: 34px;
+  padding: 0 10px;
+  border-radius: 8px;
+  border: 1px solid var(--gapps-border);
+  background: var(--gapps-surface);
+  color: var(--gapps-fg);
+  font: inherit;
+  outline: none;
+}
+
+.gapps-field input:not([type="checkbox"])::placeholder {
+  color: var(--gapps-muted);
+  opacity: 0.7;
+}
+
+.gapps-field input:not([type="checkbox"]):focus {
+  border-color: var(--gapps-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--gapps-accent) 25%, transparent);
+}
+
+.gapps-chips {
+  display: flex;
+  gap: 8px;
+}
+
+.gapps-chip {
+  position: relative;
+  display: flex;
+}
+
+.gapps-chip > input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.gapps-chip > span {
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--gapps-border);
+  color: var(--gapps-muted);
+  cursor: pointer;
+  transition: all 120ms ease;
+}
+
+.gapps-chip > input:checked + span {
+  color: var(--gapps-fg);
+  border-color: var(--gapps-accent);
+  background: color-mix(in srgb, var(--gapps-accent) 18%, transparent);
+}
+
+.gapps-chip > input:focus-visible + span {
+  outline: 2px solid var(--gapps-accent);
+  outline-offset: 2px;
+}
+
+.gapps-swatches {
+  display: flex;
+  gap: 8px;
+}
+
+.gapps-swatch {
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--gapps-swatch);
+  cursor: pointer;
+  transition: box-shadow 120ms ease, transform 120ms ease;
+}
+
+.gapps-swatch:hover {
+  transform: scale(1.1);
+}
+
+.gapps-swatch[selected] {
+  box-shadow: 0 0 0 2px var(--gapps-bg), 0 0 0 4px var(--gapps-swatch);
+}
+
+.gapps-swatch:focus-visible {
+  outline: 2px solid var(--gapps-fg);
+  outline-offset: 3px;
+}
+
+.gapps-add-error {
+  min-height: 0;
+  color: var(--gapps-red, #e06c75);
+  font-size: 12px;
+}
+
+.gapps-add-error:empty {
+  display: none;
+}
+
+.gapps-add-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.gapps-button {
+  appearance: none;
+  height: 32px;
+  padding: 0 14px;
+  border-radius: 8px;
+  border: 1px solid var(--gapps-border);
+  background: transparent;
+  color: var(--gapps-fg);
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.gapps-button:hover {
+  background: var(--gapps-hover);
+}
+
+.gapps-button.gapps-primary {
+  border-color: transparent;
+  background: var(--gapps-accent);
+  color: var(--gapps-bg);
+  font-weight: 600;
+}
+
+.gapps-button.gapps-primary:hover {
+  background: color-mix(in srgb, var(--gapps-accent) 85%, var(--gapps-fg));
 }
 
 /* Extension buttons (1Password etc.) after the app name. */

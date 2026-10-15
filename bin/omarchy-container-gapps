@@ -3,6 +3,7 @@
 # Open the Mail or Calendar app, or focus it and bring it to the current
 # workspace if it is already open.
 # usage: omarchy-container-gapps mail|calendar [--compose]
+#        omarchy-container-gapps add <label> [email] [mail|cal|mail,cal] [color]
 #        omarchy-container-gapps addons   (install 1Password etc. in the app)
 
 set -euo pipefail
@@ -11,15 +12,56 @@ APP_ID=omarchy-container-gapps
 ROOT=$(dirname "$(dirname "$(readlink -f "$0")")")
 PROFILE=${XDG_DATA_HOME:-$HOME/.local/share}/$APP_ID/profile
 FIREFOX=${GAPPS_FIREFOX:-/usr/lib/firefox/firefox}
+ACCOUNTS=${XDG_CONFIG_HOME:-$HOME/.config}/$APP_ID/accounts
+
+usage() {
+  cat >&2 <<USAGE
+usage: $APP_ID mail|calendar [--compose]
+       $APP_ID add <label> [email] [mail|cal|mail,cal] [color]
+       $APP_ID addons
+USAGE
+  exit 1
+}
+
+# Add a line to the accounts file. Open windows pick it up within 2s and show
+# a new pill on Google's sign-in page.
+add_account() {
+  local label=${1:-} email="" apps=mail,cal color="" arg
+  [[ -n $label && $label != -* ]] || usage
+  if [[ $label =~ [[:space:]#] ]]; then
+    echo "$APP_ID: the label must be one word, without #" >&2
+    exit 1
+  fi
+  shift
+  for arg in "$@"; do
+    case $arg in
+      *@*) email=$arg ;;
+      mail | cal | calendar | mail,cal | cal,mail | mail,calendar) apps=$arg ;;
+      *) color=$arg ;;
+    esac
+  done
+
+  mkdir -p "$(dirname "$ACCOUNTS")"
+  touch "$ACCOUNTS"
+  if awk -v label="$label" '{ sub(/#.*/, "") } $1 == label { found = 1 } END { exit !found }' "$ACCOUNTS"; then
+    echo "$APP_ID: $label is already in $ACCOUNTS" >&2
+    exit 1
+  fi
+  [[ -s $ACCOUNTS && $(tail -c1 "$ACCOUNTS") != "" ]] && echo >>"$ACCOUNTS"
+  printf '%-10s %-10s %s %s\n' "$label" "$apps" "$email" "$color" | sed 's/ *$//' >>"$ACCOUNTS"
+  echo "Added $label. Its pill opens on Google's sign-in page."
+}
 
 case ${1:-} in
   mail) role=mail title=Mail ;;
   cal | calendar) role=calendar title=Calendar ;;
   addons) role=addons title=Mail ;;
-  *)
-    echo "usage: $APP_ID mail|calendar [--compose] | addons" >&2
-    exit 1
+  add)
+    shift
+    add_account "$@"
+    exit 0
     ;;
+  *) usage ;;
 esac
 request="about:blank?gapps=$role"
 [[ ${2:-} == --compose ]] && request+="&compose"
@@ -29,11 +71,13 @@ find_window() {
     '[.[] | select(.class == $class and (.title | startswith($title)))][0].address // empty'
 }
 
+# The workspace you were on when you asked. Read it once, up front: Firefox
+# may open the window next to the other app's window and pull focus there.
+WORKSPACE=$(hyprctl activeworkspace -j | jq -r '.id')
+
 bring_here() {
-  local workspace
-  workspace=$(hyprctl activeworkspace -j | jq -r '.id')
   hyprctl dispatch "hl.dsp.focus({ window = \"address:$1\" })" >/dev/null
-  hyprctl dispatch "hl.dsp.window.move({ workspace = \"$workspace\" })" >/dev/null
+  hyprctl dispatch "hl.dsp.window.move({ workspace = \"$WORKSPACE\" })" >/dev/null
 }
 
 # Firefox's profile lock is a symlink to "<ip>:+<pid>" while it runs.

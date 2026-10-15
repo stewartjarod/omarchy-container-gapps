@@ -316,6 +316,7 @@ function applyTheme(win) {
     "--gapps-hover": mix(bg, fg, 0.05),
     "--gapps-border": mix(bg, fg, 0.1),
     "--gapps-accent": accent,
+    "--gapps-red": t.red || themeColor("red"),
   };
   for (const [name, value] of Object.entries(vars)) root.style.setProperty(name, value);
   root.setAttribute("gapps-mode", t.mode || "dark");
@@ -351,6 +352,15 @@ function installKeys(win) {
     key.addEventListener("command", () => cycleAccounts(win, step));
     keyset.append(key);
   }
+  // Ctrl+T adds an account; a blank tab has no use here.
+  doc.getElementById("key_newNavigatorTab")?.remove();
+  const addKey = doc.createXULElement("key");
+  addKey.setAttribute("key", "t");
+  addKey.setAttribute("modifiers", "accel");
+  addKey.setAttribute("reserved", "true");
+  addKey.setAttribute("oncommand", "void 0");
+  addKey.addEventListener("command", () => openAddPanel(win));
+  keyset.append(addKey);
   doc.getElementById("mainKeyset").after(keyset);
 }
 
@@ -360,6 +370,180 @@ function addSideLabel(win) {
   label.id = "gapps-app-label";
   label.textContent = APPS[win.gappsRole].title;
   doc.getElementById("TabsToolbar-customization-target")?.append(label);
+}
+
+// --- Adding accounts --------------------------------------------------------
+
+// The + after the pills (Firefox's own new-tab button, repurposed) and Ctrl+T
+// open a small form that appends a line to the accounts file, the same as
+// `omarchy-container-gapps add`.
+
+function h(doc, tag, props = {}, ...children) {
+  const el = doc.createElementNS(HTML_NS, tag);
+  for (const [key, value] of Object.entries(props)) {
+    if (key === "class") el.className = value;
+    else if (key === "text") el.textContent = value;
+    else el.setAttribute(key, value);
+  }
+  el.append(...children);
+  return el;
+}
+
+async function appendAccount({ label, email, apps, color }) {
+  const current = (await readText(ACCOUNTS_FILE)) ?? "";
+  const line = [label.padEnd(10), apps.padEnd(10), email, color].join(" ").trimEnd();
+  const newline = current && !current.endsWith("\n") ? "\n" : "";
+  await IOUtils.makeDirectory(PathUtils.parent(ACCOUNTS_FILE), { ignoreExisting: true });
+  await IOUtils.writeUTF8(ACCOUNTS_FILE, `${newline}${line}\n`, { mode: "appendOrCreate" });
+  await reloadFiles();
+}
+
+function buildAddPanel(win) {
+  const doc = win.document;
+  const panel = doc.createXULElement("panel");
+  panel.id = "gapps-add-panel";
+  panel.setAttribute("type", "arrow");
+  panel.setAttribute("orient", "vertical");
+
+  const swatches = h(doc, "div", { class: "gapps-swatches", role: "radiogroup", "aria-label": "Color" });
+  for (const name of DEFAULT_COLORS) {
+    swatches.append(h(doc, "button", { type: "button", class: "gapps-swatch", "data-color": name, title: name, role: "radio" }));
+  }
+
+  const form = h(
+    doc,
+    "form",
+    { id: "gapps-add-form", autocomplete: "off" },
+    h(doc, "div", { class: "gapps-add-title", text: "Add an account" }),
+    h(doc, "div", { class: "gapps-add-hint", text: "It gets its own container. You sign in to Google next." }),
+    h(
+      doc,
+      "label",
+      { class: "gapps-field" },
+      h(doc, "span", { text: "Name" }),
+      h(doc, "input", { name: "label", placeholder: "Work", spellcheck: "false", maxlength: "24" })
+    ),
+    h(
+      doc,
+      "label",
+      { class: "gapps-field" },
+      h(doc, "span", { text: "Email", class: "gapps-optional" }),
+      h(doc, "input", { name: "email", type: "email", placeholder: "you@example.com", spellcheck: "false" })
+    ),
+    h(
+      doc,
+      "div",
+      { class: "gapps-field" },
+      h(doc, "span", { text: "Show in" }),
+      h(
+        doc,
+        "div",
+        { class: "gapps-chips" },
+        h(doc, "label", { class: "gapps-chip" }, h(doc, "input", { type: "checkbox", name: "mail" }), h(doc, "span", { text: "Mail" })),
+        h(doc, "label", { class: "gapps-chip" }, h(doc, "input", { type: "checkbox", name: "calendar" }), h(doc, "span", { text: "Calendar" }))
+      )
+    ),
+    h(doc, "div", { class: "gapps-field" }, h(doc, "span", { text: "Color" }), swatches),
+    h(doc, "div", { class: "gapps-add-error", role: "alert" }),
+    h(
+      doc,
+      "div",
+      { class: "gapps-add-actions" },
+      h(doc, "button", { type: "button", class: "gapps-button", name: "cancel", text: "Cancel" }),
+      h(doc, "button", { type: "submit", class: "gapps-button gapps-primary", text: "Add account" })
+    )
+  );
+  panel.append(form);
+  doc.getElementById("mainPopupSet").append(panel);
+
+  const error = form.querySelector(".gapps-add-error");
+  const pickColor = name => {
+    for (const swatch of swatches.children) {
+      const on = swatch.dataset.color === name;
+      swatch.toggleAttribute("selected", on);
+      swatch.setAttribute("aria-checked", on);
+    }
+  };
+  for (const swatch of swatches.children) {
+    swatch.style.setProperty("--gapps-swatch", themeColor(swatch.dataset.color));
+    swatch.addEventListener("click", () => pickColor(swatch.dataset.color));
+  }
+
+  panel.addEventListener("popupshowing", event => {
+    if (event.target !== panel) return;
+    form.reset();
+    error.textContent = "";
+    form.elements.mail.checked = true;
+    form.elements.calendar.checked = true;
+    for (const swatch of swatches.children) swatch.style.setProperty("--gapps-swatch", themeColor(swatch.dataset.color));
+    pickColor(DEFAULT_COLORS[state.accounts.length % DEFAULT_COLORS.length]);
+  });
+  panel.addEventListener("popupshown", event => {
+    if (event.target === panel) form.elements.label.focus();
+  });
+  form.elements.cancel.addEventListener("click", () => panel.hidePopup());
+
+  form.addEventListener("submit", async event => {
+    event.preventDefault();
+    const label = form.elements.label.value.trim();
+    const email = form.elements.email.value.trim();
+    const roles = ["mail", "calendar"].filter(role => form.elements[role].checked);
+    const fail = message => {
+      error.textContent = message;
+      return null;
+    };
+    if (!label) return fail("Give it a name, like Work.");
+    if (/[\s#]/.test(label)) return fail("The name has to be one word.");
+    if (state.accounts.some(account => account.label.toLowerCase() === label.toLowerCase())) {
+      return fail(`${label} is already there.`);
+    }
+    if (email && !/^[^\s@]+@[^\s@]+$/.test(email)) return fail("That email doesn't look right.");
+    if (!roles.length) return fail("Pick Mail, Calendar or both.");
+
+    const color = swatches.querySelector("[selected]")?.dataset.color || "";
+    const apps = roles.length === 2 ? "mail,cal" : roles[0] === "calendar" ? "cal" : "mail";
+    try {
+      await appendAccount({ label, email, apps, color });
+    } catch (e) {
+      report(e);
+      return fail("Couldn't write the accounts file.");
+    }
+    panel.hidePopup();
+    const tab = accountTabs(win).find(t => t.getAttribute("gapps-account") === label);
+    if (tab) win.gBrowser.selectedTab = tab;
+    return null;
+  });
+  return panel;
+}
+
+function openAddPanel(win) {
+  const panel = win.document.getElementById("gapps-add-panel") || buildAddPanel(win);
+  const anchor = win.document.querySelector(".gapps-add-button");
+  panel.openPopup(anchor, "after_start", 0, 6);
+}
+
+function installAddButton(win) {
+  const doc = win.document;
+  let button = doc.getElementById("tabs-newtab-button");
+  if (button) {
+    // Keep Firefox's button (it already sits after the last tab) but take
+    // away its new-tab command.
+    button.removeAttribute("command");
+    button.removeAttribute("onclick");
+  } else {
+    button = doc.createXULElement("toolbarbutton");
+    doc.getElementById("tabbrowser-tabs").after(button);
+  }
+  button.classList.add("gapps-add-button");
+  button.setAttribute("tooltiptext", "Add an account (Ctrl+T)");
+  button.addEventListener(
+    "command",
+    event => {
+      event.stopPropagation();
+      openAddPanel(win);
+    },
+    true
+  );
 }
 
 // --- Handing links to the default browser ----------------------------------
@@ -493,6 +677,7 @@ function setUpWindow(win, launch) {
   });
 
   installKeys(win);
+  installAddButton(win);
   addSideLabel(win);
   placeExtensionButtons(win).catch(report);
 
