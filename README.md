@@ -37,6 +37,13 @@ Work        mail,cal   you@example.org     orange
 Side        mail
 ```
 
+Or add one without opening the file: click **+** after the pills (or press
+Ctrl+T in the app), or run
+
+```sh
+omarchy-container-gapps add Work you@example.org orange
+```
+
 `apps` is `mail`, `cal` or `mail,cal`. Email and color are optional; the email
 pre-fills Google's sign-in page, and the color is a theme color name
 (`accent`, `red`, `green`, `yellow`, `blue`, `magenta`, `cyan`, `orange`) or
