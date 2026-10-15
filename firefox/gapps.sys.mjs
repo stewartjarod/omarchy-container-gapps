@@ -566,28 +566,18 @@ function staysInApp(url) {
   }
 }
 
-// Variables Firefox sets for itself; a Firefox started by the default browser
-// handler must not inherit them, or it could attach to this profile.
-const FIREFOX_ENV = [
-  "XRE_PROFILE_PATH",
-  "XRE_PROFILE_LOCAL_PATH",
-  "XRE_PROFILE_NAME",
-  "XRE_BINARY_PATH",
-  "XRE_RESTARTED_BY_PROFILE_MANAGER",
-  "XRE_START_OFFLINE",
-  "MOZ_LAUNCHED_CHILD",
-  "MOZ_APP_SILENT_START",
-  "MOZ_APP_REMOTINGNAME",
-  ...Array.from({ length: 16 }, (_, i) => `MOZ_CRASHREPORTER_RESTART_ARG_${i}`),
-];
-
+// Hand the link to the default browser through systemd, so it starts outside
+// this Firefox's process tree. Started directly as a child of this Firefox, a
+// second Firefox can't reach the running main instance and shows "Firefox is
+// already running, but is not responding".
 function openInDefaultBrowser(url) {
-  const args = [...FIREFOX_ENV.flatMap(name => ["-u", name]), "xdg-open", url];
-  const env = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
-  env.initWithPath("/usr/bin/env");
+  const systemdRun = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
+  systemdRun.initWithPath("/usr/bin/systemd-run");
+  const args = ["--user", "--quiet", "--collect", "--", "xdg-open", url];
   const proc = Cc["@mozilla.org/process/util;1"].createInstance(Ci.nsIProcess);
-  proc.init(env);
+  proc.init(systemdRun);
   proc.runAsync(args, args.length);
+  debug("handed to default browser", url);
 }
 
 function tabsProgressListener(win) {
